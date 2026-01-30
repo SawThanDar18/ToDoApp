@@ -1,0 +1,120 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todoapp/controller/category_controller/bloc/home_bloc_bloc.dart';
+import 'package:todoapp/controller/category_controller/data/model/category_model.dart';
+import 'package:todoapp/controller/select_category_cubit/selectcategory_cubit.dart';
+import 'package:todoapp/controller/todo_controller/bloc/todo_bloc.dart';
+import 'package:todoapp/core/words/app_words.dart';
+import 'package:todoapp/features/home/widgets/floating_widgets/home_category_select_widget.dart';
+
+class HomeFloatingBottomTaskWidget extends StatelessWidget {
+  const HomeFloatingBottomTaskWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SelectcategoryCubit, CategoryModel>(
+      builder: (_, model) {
+        return Column(
+          spacing: 12,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextHolderWidget(
+              key: const ValueKey('home-text-holder-widget'),
+              id: model.id,
+            ),
+            const Row(
+              spacing: 12,
+              children: [
+                HomeCategorySelectWidget(
+                  key: ValueKey('home-category-select-widget'),
+                ),
+                /**
+                 * 
+                 *  WANT TO WORK :: FEATURE TO IMPLEMENT THIS TO CAPTURE 
+                 *  SELECT DATE
+                 * 
+                 */
+                // HomeDateSelectWidget(key: ValueKey('home_date_select_widget')),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+///
+/// TEXTHOLDERWIDGET CLASS: TO ADD TODOINTODB
+///
+
+class TextHolderWidget extends StatefulWidget {
+  final int id;
+  const TextHolderWidget({super.key, required this.id});
+
+  @override
+  State<TextHolderWidget> createState() => _TextHolderWidgetState();
+}
+
+class _TextHolderWidgetState extends State<TextHolderWidget> {
+  late TextEditingController _textEditingController;
+
+  @override
+  void initState() {
+    _textEditingController = TextEditingController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _textEditingController.dispose();
+    super.dispose();
+  }
+
+  void _insetTodo() {
+    if (_textEditingController.text.trim().isEmpty) return;
+    int categoryId = (context.read<HomeBloc>().state as LoadedCategoryState)
+        .selectedCategories
+        .id;
+    context.read<TodoBloc>().add(
+      AddTodoEvent(
+        todo: _textEditingController.text.trim(),
+        categoryId: widget.id,
+        filterBy: categoryId,
+      ),
+    );
+    _textEditingController.clear();
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      borderRadius: BorderRadius.circular(18),
+      child: TextField(
+        controller: _textEditingController,
+        autofocus: true,
+        onSubmitted: (_) => _insetTodo(),
+        style: const TextStyle(fontSize: 20),
+        decoration: InputDecoration(
+          constraints: const BoxConstraints(maxHeight: 85, minHeight: 85),
+          fillColor: Theme.of(context).scaffoldBackgroundColor,
+          filled: true,
+          hintText: AppWords.inputNewTaskHere,
+          contentPadding: const EdgeInsets.fromLTRB(8, 25, 0, 25),
+          suffixIcon: IconButton(
+            onPressed: _insetTodo,
+            icon: Icon(
+              Icons.send,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+          ),
+          border: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+    );
+  }
+}
